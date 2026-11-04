@@ -20,11 +20,20 @@ def log(msg):
     print(f"[{time.strftime('%H:%M:%S')}] {msg}", flush=True)
 
 
+def ya_eliminando(e):
+    """True si AWS rechaza la orden porque el recurso ya está en proceso de eliminación (repetir el script es seguro)."""
+    codigo = e.response["Error"]["Code"]
+    mensaje = e.response["Error"].get("Message", "").lower()
+    return codigo.startswith(("InvalidDBInstanceState", "InvalidClusterState", "InvalidDBClusterState")) and "delet" in mensaje
+
+
 def quiet(fn, *ok_codes):
     """Ejecuta fn; si el recurso ya no existe (o el código es esperado), sigue."""
     try:
         return fn()
     except ClientError as e:
+        if ya_eliminando(e):
+            return None
         code = e.response["Error"]["Code"]
         if code in ok_codes or "NotFound" in code or code in ("NoSuchEntity", "NoSuchBucket", "ResourceNotFoundException"):
             return None
@@ -43,12 +52,38 @@ def wait_gone(label, probe, fast, timeout=40 * 60, interval=30):
         time.sleep(0 if fast else interval)
 
 
+def estado_docdb(docdb):
+    return quiet(lambda: docdb.describe_db_clusters(DBClusterIdentifier=f"{P}-docdb")["DBClusters"][0]["Status"], "DBClusterNotFoundFault")
+
+
+def encender_docdb_si_esta_detenido(docdb, fast, esperar):
+    """AWS no deja eliminar un clúster de DocumentDB detenido: hay que encenderlo primero (tarda unos minutos)."""
+    estado = estado_docdb(docdb)
+    if estado is None:
+        return
+    if estado in ("stopped", "stopping") and not esperar:
+        for _ in range(40):  # si todavía se está deteniendo, esperar a que termine
+            if estado_docdb(docdb) == "stopped":
+                break
+            time.sleep(0 if fast else 15)
+        log("DocumentDB está detenido: AWS exige encenderlo antes de eliminarlo; se enciende ahora")
+        quiet(lambda: docdb.start_db_cluster(DBClusterIdentifier=f"{P}-docdb"))
+    if esperar:
+        inicio = time.time()
+        while estado_docdb(docdb) not in ("available", None):
+            if time.time() - inicio > 40 * 60:
+                sys.exit("DocumentDB no volvió a estar disponible en 40 minutos")
+            log(f"DocumentDB: {estado_docdb(docdb)}...")
+            time.sleep(0 if fast else 30)
+
+
 def destroy(fast=False):
     s = boto3.session.Session(region_name=REGION)
     ec2, rds, docdb, rs, iam, sm, s3 = (s.client(n) for n in ("ec2", "rds", "docdb", "redshift", "iam", "secretsmanager", "s3"))
     account = s.client("sts").get_caller_identity()["Account"]
 
-    # 1. cómputo y bases de datos (lo que cobra por hora)
+    # 1. cómputo y bases de datos (lo que cobra por hora). DocumentDB, si está detenido, se enciende ya para eliminarlo después.
+    encender_docdb_si_esta_detenido(docdb, fast, esperar=False)
     reservations = ec2.describe_instances(Filters=[{"Name": "tag:Name", "Values": [f"{P}-airflow"]}, {"Name": "instance-state-name", "Values": ["pending", "running", "stopping", "stopped"]}])["Reservations"]
     ids = [i["InstanceId"] for r in reservations for i in r["Instances"]]
     if ids:
@@ -56,6 +91,7 @@ def destroy(fast=False):
         log(f"EC2 {ids}: terminando")
     quiet(lambda: rs.delete_cluster(ClusterIdentifier=f"{P}-redshift", SkipFinalClusterSnapshot=True), "ClusterNotFound")
     quiet(lambda: rds.delete_db_instance(DBInstanceIdentifier=f"{P}-mysql", SkipFinalSnapshot=True, DeleteAutomatedBackups=True), "DBInstanceNotFound")
+    encender_docdb_si_esta_detenido(docdb, fast, esperar=True)
     quiet(lambda: docdb.delete_db_instance(DBInstanceIdentifier=f"{P}-docdb-1"), "DBInstanceNotFound")
     if ids:
         quiet(lambda: ec2.get_waiter("instance_terminated").wait(InstanceIds=ids, WaiterConfig={"Delay": 1 if fast else 15, "MaxAttempts": 60}))

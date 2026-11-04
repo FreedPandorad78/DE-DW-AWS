@@ -1,0 +1,11 @@
+VERIFICACIÓN DE ELIMINACIÓN DEL DATA WAREHOUSE  (2026-11-04 15:12:17)
+
+OK      sin instancias EC2 del proyecto
+OK      sin instancias RDS del proyecto
+OK      sin clústeres de DocumentDB del proyecto
+OK      sin clústeres de Redshift del proyecto
+OK      sin grupos de seguridad del proyecto
+OK      sin pares de claves del proyecto
+OK      sin roles de IAM del proyecto
+OK      sin secretos del proyecto
+OK      sin buckets del proyecto

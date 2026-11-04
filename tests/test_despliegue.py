@@ -44,6 +44,12 @@ class FakeDocDb:
     def delete_db_subnet_group(self, **kw):
         self._check("DeleteDBSubnetGroup", kw); self.subnets.pop(kw["DBSubnetGroupName"], None); return {}
 
+    def start_db_cluster(self, **kw):
+        self._check("StartDBCluster", kw)
+        self.clusters[kw["DBClusterIdentifier"]]["Status"] = "available"
+        self.arranques = getattr(self, "arranques", 0) + 1
+        return {}
+
     def describe_db_clusters(self, **kw):
         self._check("DescribeDBClusters", kw)
         if "DBClusterIdentifier" in kw:
@@ -53,7 +59,7 @@ class FakeDocDb:
 
     def create_db_cluster(self, **kw):
         self._check("CreateDBCluster", kw)
-        self.clusters[kw["DBClusterIdentifier"]] = dict(kw, Endpoint=f"{kw['DBClusterIdentifier']}.cluster-x.us-east-2.docdb.amazonaws.com")
+        self.clusters[kw["DBClusterIdentifier"]] = dict(kw, Status="available", Endpoint=f"{kw['DBClusterIdentifier']}.cluster-x.us-east-2.docdb.amazonaws.com")
         return {}
 
     def delete_db_cluster(self, **kw):
@@ -68,7 +74,10 @@ class FakeDocDb:
         self._check("CreateDBInstance", kw); self.instances[kw["DBInstanceIdentifier"]] = kw; return {}
 
     def delete_db_instance(self, **kw):
-        self._check("DeleteDBInstance", kw); self.instances.pop(kw["DBInstanceIdentifier"], None); return {}
+        self._check("DeleteDBInstance", kw)
+        if any(c.get("Status") == "stopped" for c in self.clusters.values()):
+            raise ClientError({"Error": {"Code": "InvalidDBClusterStateFault", "Message": "Db cluster taller-dw-docdb is in stopped state"}}, "DeleteDBInstance")
+        self.instances.pop(kw["DBInstanceIdentifier"], None); return {}
 
 
 FAKE_DOCDB = FakeDocDb()
@@ -116,6 +125,10 @@ def main():
     ok("password" not in text.lower() and secret["password"] not in text, "recursos_dw.env no contiene contraseñas")
     ok(all(k in text for k in ("BUCKET=", "RDS_HOST=", "DOCDB_HOST=", "REDSHIFT_HOST=", "REDSHIFT_IAM_ROLE_ARN=", "EC2_IP=")), "recursos_dw.env tiene los datos de conexión")
     ok(oct(os.stat(os.path.join(HOME, ".ssh", "taller-dw-key.pem")).st_mode)[-3:] == "600", "clave SSH con permisos 600")
+    ok(des.ya_eliminando(ClientError({"Error": {"Code": "InvalidDBInstanceState", "Message": "Instance x is already being deleted."}}, "DeleteDBInstance")) and
+       des.ya_eliminando(ClientError({"Error": {"Code": "InvalidClusterState", "Message": "Cluster is in deleting state"}}, "DeleteCluster")) and
+       not des.ya_eliminando(ClientError({"Error": {"Code": "InvalidDBClusterStateFault", "Message": "Db cluster is in stopped state"}}, "DeleteDBInstance")),
+       "repetir la destrucción es seguro: lo que ya se está eliminando no es error, pero un clúster detenido sí se atiende")
 
     print("\n== Idempotencia: desplegar de nuevo no duplica nada ==")
     before = (len([r for x in ec2.describe_instances()["Reservations"] for r in x["Instances"]]), len(sm.list_secrets()["SecretList"]))
@@ -127,6 +140,7 @@ def main():
 
     print("\n== Destrucción y verificación ==")
     s3.put_object(Bucket=bucket, Key="raw/mysql/customers/batch_id=1/data.csv", Body=b"x")
+    FAKE_DOCDB.clusters["taller-dw-docdb"]["Status"] = "stopped"  # como lo deja ./infra/energia_dw.sh pausar
     sys.argv = ["destruir_dw.py", "--yes", "--sin-esperas", "--evidencia", os.path.join(HOME, "eliminacion.txt"), "--env-file", env]
     try:
         des.main()
@@ -134,6 +148,7 @@ def main():
         ok(e.code == 0, "la destrucción termina con código 0")
     report = Path(HOME, "eliminacion.txt").read_text()
     ok("QUEDA" not in report and report.count("OK ") == 9, "la verificación no encuentra ningún recurso")
+    ok(getattr(FAKE_DOCDB, "arranques", 0) == 1, "DocumentDB estaba detenido: se encendió una vez antes de eliminarlo")
     ok(not Path(env).exists() and not Path(HOME, ".ssh", "taller-dw-key.pem").exists(), "se borran recursos_dw.env y la clave SSH")
     print("\nTODAS LAS PRUEBAS PASARON")
 
