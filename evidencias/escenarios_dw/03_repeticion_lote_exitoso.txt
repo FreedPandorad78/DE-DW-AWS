@@ -1,0 +1,29 @@
+ESCENARIO: Repetición de un lote exitoso
+RESULTADO ESPERADO: Sin duplicación de hechos ni de versiones históricas
+ESTADO: CUMPLE
+FECHA (UTC): 2026-11-04 18:05:43
+
+Se reprocesa desde S3, sin consultar las fuentes, el lote ya exitoso 20261104T175540Z
+Ejecución de Airflow: esc_1104130321 -> EXITOSO | lote 20261104T175540Z | modo REPROCESO
+  [OK] la ejecución terminó EXITOSA y todas las tareas en success
+--- Estado del almacén (filas, llaves distintas, total, huella del contenido) ---
+  ventas           antes=[253, 253, '7293790.26', ************]
+                   después=[253, 253, '7293790.26', ************]
+  resenas          antes=[150, 150, '477', ************]
+                   después=[150, 150, '477', ************]
+  eventos          antes=[500, 500, '0', 1051341798984]
+                   después=[500, 500, '0', 1051341798984]
+  dim_customer     antes=[50, 50]
+                   después=[50, 50]
+  dim_product      antes=[25, 25]
+                   después=[25, 25]
+  cuarentena       antes=[32]
+                   después=[32]
+  lotes_completos  antes=[2]
+                   después=[2]
+  [OK] modo REPROCESO: no se consultaron las fuentes
+  [OK] hechos idénticos: mismas filas, llaves, totales y huella de contenido
+  [OK] versiones de dimensiones iguales (sin versiones históricas nuevas)
+  [OK] la cuarentena no cambió
+  [OK] raw reemplaza las filas del lote, no las duplica
+  [OK] las marcas de avance no se movieron

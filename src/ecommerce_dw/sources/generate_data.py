@@ -15,6 +15,8 @@ from faker import Faker
 from pymongo import MongoClient
 from pymongo.errors import CollectionInvalid
 
+from ecommerce_dw.aws import connections
+
 DEPARTMENTS = [
     ("Bogotá, D.C.", "Bogotá"),
     ("Antioquia", "Medellín"),
@@ -110,15 +112,8 @@ def parse_args():
 
 
 def connect_mysql():
-    return pymysql.connect(
-        host=os.getenv("MYSQL_HOST", "localhost"),
-        port=int(os.getenv("MYSQL_PORT", "3306")),
-        user=os.environ["MYSQL_USER"],
-        password=os.environ["MYSQL_PASSWORD"],
-        database=os.getenv("MYSQL_DATABASE", "ecommerce"),
-        charset="utf8mb4",
-        autocommit=False,
-    )
+    """RDS MySQL con TLS y contraseña de Secrets Manager (o MYSQL_* en local)."""
+    return connections.connect_mysql()
 
 
 def ensure_mongo_collections(db):
@@ -416,7 +411,7 @@ def build_bad_records(args, start):
 
 
 def load_mongo(args, rng, fake, customers, products, start, bad):
-    client = MongoClient(os.environ["MONGODB_URI"])
+    client = connections.connect_mongo()  # DocumentDB con TLS, sin retryWrites
     try:
         db = client[os.getenv("MONGO_DATABASE", "ecommerce")]
         ensure_mongo_collections(db)

@@ -12,7 +12,7 @@ with events as (
         customer_id,
         product_id,
         sales_channel,
-        timezone('America/Bogota', occurred_at) as occurred_local_at
+        {{ local_timestamp('occurred_at') }} as occurred_local_at
     from {{ ref('int_mongodb__navigation_events__valid') }}
 ),
 customers_versioned as (
@@ -53,4 +53,4 @@ select
     candidate.sales_channel_sk,
     candidate.event_type_sk
 from resolved_events as candidate
-{{ incremental_candidate_filter('navigation_event_sk', 'business_date', ['customer_sk', 'product_sk']) }}
+{{ incremental_candidate_filter('navigation_event_sk', 'business_date', ['customer_sk', 'product_sk'], candidates='resolved_events') }}

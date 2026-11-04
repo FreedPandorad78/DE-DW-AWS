@@ -1,0 +1,27 @@
+ESCENARIO: Cambio en un atributo historizado (SCD2)
+RESULTADO ESPERADO: Una versión nueva de la dimensión; la anterior se cierra; los hechos posteriores apuntan a la nueva
+ESTADO: CUMPLE
+FECHA (UTC): 2026-11-04 18:11:02
+
+Cliente 3: Barranquilla, Atlántico -> Cali, Valle del Cauca   |   Producto 3: Ropa -> Deportes   |   vigente desde 2025-09-01T00:00:00
+Fuente: Customer 3: Barranquilla, Atlántico -> Cali, Valle del Cauca | Product 3: Ropa -> Deportes
+Ejecución de Airflow: esc_1104130828 -> EXITOSO | lote 20261104T180840Z | modo NUEVA_EXTRACCION
+  [OK] la ejecución terminó EXITOSA y todas las tareas en success
+--- Versiones del cliente (marts.dim_customer) ---
+  aa3d21e6ca…  Barranquilla   desde 2024-03-21 00:00:00  hasta 2025-09-01 00:00:00  vigente=False
+  b56c4531ea…  Cali           desde 2025-09-01 00:00:00  hasta None  vigente=True
+--- Versiones del producto (marts.dim_product) ---
+  fadc1a71aa…  Ropa           desde 2025-01-01 00:00:00  hasta 2025-09-01 00:00:00  vigente=False
+  8792c47111…  Deportes       desde 2025-09-01 00:00:00  hasta None  vigente=True
+  [OK] el cliente tiene 2 versiones: la anterior cerrada y la nueva vigente
+  [OK] el producto tiene 2 versiones: la anterior cerrada y la nueva vigente
+--- Ventas del cliente por versión (vigente=False/True): [[False, 4], [True, 6]] ---
+  [OK] las ventas del cliente no se pierden ni se duplican: antes 10, después 10
+  [OK] el número de filas de los hechos no cambió
+  [OK] la dimensión creció en una versión por cada entidad cambiada
+--- Conciliación del modelo con el origen válido (s3://.../quality/batch_id=20261104T180840Z/reconciliation.json) ---
+  [OK] ventas: origen=256 filas / 7357260.42; modelo=256 filas / 7357260.42; llaves duplicadas=0
+  [OK] reseñas: origen=153 filas / 0; modelo=153 filas / 0; llaves duplicadas=0
+  [OK] eventos de navegación: origen=503 filas / 0; modelo=503 filas / 0; llaves duplicadas=0
+  [OK] subtotal de ventas por fecha de negocio: fechas con diferencia=0
+  Pruebas de dbt: {'pass': 92, 'warn': 0, 'error': 0, 'skip': 0, 'total': 92}

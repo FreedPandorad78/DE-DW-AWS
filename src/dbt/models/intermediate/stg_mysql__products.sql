@@ -1,3 +1,8 @@
+-- raw acumula los lotes extraídos: aquí queda la última versión de cada llave.
+with latest as (
+    {{ latest_batch_version(source('mysql_raw', 'mysql_products'), 'product_id') }}
+)
+
 select
     cast(product_id as bigint) as product_id,
     nullif(trim(name), '') as name,
@@ -6,6 +11,7 @@ select
     nullif(trim(description), '') as description,
     cast(is_active as boolean) as is_active,
     cast(updated_at as timestamp) as updated_at,
+    _batch_id,
     _loaded_at,
     _source
-from {{ source('mysql_raw', 'mysql_products') }}
+from latest

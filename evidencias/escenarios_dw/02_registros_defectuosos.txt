@@ -1,0 +1,32 @@
+ESCENARIO: Registros defectuosos
+RESULTADO ESPERADO: Los rechazos quedan en cuarentena con su motivo y su lote de origen, y no entran al modelo
+ESTADO: CUMPLE
+FECHA (UTC): 2026-11-04 18:21:15
+
+--- Cada registro recibido es válido o está en cuarentena ---
+  [OK] customers          recibidos=  54 = válidos   50 + cuarentena   4
+  [OK] navigation_events  recibidos= 517 = válidos  509 + cuarentena   8
+  [OK] order_items        recibidos= 268 = válidos  262 + cuarentena   6
+  [OK] orders             recibidos= 115 = válidos  111 + cuarentena   4
+  [OK] products           recibidos=  27 = válidos   25 + cuarentena   2
+  [OK] reviews            recibidos= 167 = válidos  159 + cuarentena   8
+--- Cuarentena por entidad, motivo y lote de origen ---
+  customers          invalid_email            lote de origen 20261104T175208Z   2 registros
+  customers          missing_name             lote de origen 20261104T175208Z   2 registros
+  navigation_events  invalid_event_type       lote de origen 20261104T175208Z   2 registros
+  navigation_events  missing_occurred_at      lote de origen 20261104T175208Z   2 registros
+  navigation_events  orphan_customer          lote de origen 20261104T175208Z   2 registros
+  navigation_events  orphan_product           lote de origen 20261104T175208Z   2 registros
+  order_items        orphan_order             lote de origen 20261104T175208Z   2 registros
+  order_items        orphan_product           lote de origen 20261104T175208Z   2 registros
+  order_items        subtotal_mismatch        lote de origen 20261104T175208Z   2 registros
+  orders             invalid_sales_channel    lote de origen 20261104T175208Z   2 registros
+  orders             orphan_customer          lote de origen 20261104T175208Z   2 registros
+  products           missing_category         lote de origen 20261104T175208Z   2 registros
+  reviews            invalid_rating           lote de origen 20261104T175208Z   2 registros
+  reviews            missing_reviewed_at      lote de origen 20261104T175208Z   2 registros
+  reviews            orphan_customer          lote de origen 20261104T175208Z   2 registros
+  reviews            orphan_product           lote de origen 20261104T175208Z   2 registros
+  [OK] hay motivos de rechazo registrados y todos tienen lote de origen
+  [OK] el total de la cuarentena (32) coincide con la foto del almacén (32)
+  [OK] los rechazados no están en los hechos: ventas = líneas de pedido válidas

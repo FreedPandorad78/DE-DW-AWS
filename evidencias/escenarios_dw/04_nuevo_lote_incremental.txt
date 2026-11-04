@@ -1,0 +1,39 @@
+ESCENARIO: Nuevo lote incremental
+RESULTADO ESPERADO: Solo se extraen y procesan los datos nuevos; los hechos crecen exactamente con ellos
+ESTADO: CUMPLE
+FECHA (UTC): 2026-11-04 18:08:09
+
+Fuentes: Batch 2 (2026-01-02): 3 new orders, 3 reviews and 3 navigation events upserted
+Ejecución de Airflow: esc_1104130550 -> EXITOSO | lote 20261104T180600Z | modo NUEVA_EXTRACCION
+  [OK] la ejecución terminó EXITOSA y todas las tareas en success
+--- Extracción incremental (control.batch_entities) ---
+  mongodb.navigation_events  extraídas=  13  ventana desde: 2025-12-24T14:28:00+00:00
+  mongodb.reviews            extraídas=   7  ventana desde: 2025-12-23T19:19:00+00:00
+  mysql.customers          extraídas=   0  ventana desde: 2025-01-01 00:00:00
+  mysql.order_items        extraídas=   9  ventana desde: 2025-12-22 01:42:00
+  mysql.orders             extraídas=   5  ventana desde: 2025-12-22 01:42:00
+  mysql.products           extraídas=   0  ventana desde: 2025-01-01 00:00:00
+--- Estado del almacén (filas, llaves distintas, total, huella del contenido) ---
+  ventas           antes=[253, 253, '7293790.26', ************]
+                   después=[256, 256, '7357260.42', ************]
+  resenas          antes=[150, 150, '477', ************]
+                   después=[153, 153, '483', ************]
+  eventos          antes=[500, 500, '0', 1051341798984]
+                   después=[503, 503, '0', 1054875194570]
+  dim_customer     antes=[50, 50]
+                   después=[50, 50]
+  dim_product      antes=[25, 25]
+                   después=[25, 25]
+  cuarentena       antes=[32]
+                   después=[32]
+  lotes_completos  antes=[2]
+                   después=[3]
+  [OK] cada hecho creció exactamente en 3 filas: {'ventas': 3, 'resenas': 3, 'eventos': 3}
+  [OK] la extracción fue incremental: ninguna entidad con marca de avance trajo la tabla completa
+  [OK] sin llaves duplicadas en los hechos
+--- Conciliación del modelo con el origen válido (s3://.../quality/batch_id=20261104T180600Z/reconciliation.json) ---
+  [OK] ventas: origen=256 filas / 7357260.42; modelo=256 filas / 7357260.42; llaves duplicadas=0
+  [OK] reseñas: origen=153 filas / 0; modelo=153 filas / 0; llaves duplicadas=0
+  [OK] eventos de navegación: origen=503 filas / 0; modelo=503 filas / 0; llaves duplicadas=0
+  [OK] subtotal de ventas por fecha de negocio: fechas con diferencia=0
+  Pruebas de dbt: {'pass': 92, 'warn': 0, 'error': 0, 'skip': 0, 'total': 92}

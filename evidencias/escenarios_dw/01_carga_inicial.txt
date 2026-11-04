@@ -1,0 +1,23 @@
+ESCENARIO: Carga inicial
+RESULTADO ESPERADO: Todas las entidades cargadas desde el origen, conciliadas y consultables en el modelo
+ESTADO: CUMPLE
+FECHA (UTC): 2026-11-04 18:02:55
+
+Primer lote COMPLETO: 20261104T175208Z
+--- Entidades del lote (control.batch_entities) ---
+  mongodb.navigation_events  extraídas= 508  cargadas en raw= 508  ventana desde: (sin marca previa)
+  mongodb.reviews            extraídas= 158  cargadas en raw= 158  ventana desde: (sin marca previa)
+  mysql.customers          extraídas=  54  cargadas en raw=  54  ventana desde: (sin marca previa)
+  mysql.order_items        extraídas= 259  cargadas en raw= 259  ventana desde: (sin marca previa)
+  mysql.orders             extraídas= 106  cargadas en raw= 106  ventana desde: (sin marca previa)
+  mysql.products           extraídas=  27  cargadas en raw=  27  ventana desde: (sin marca previa)
+  [OK] carga inicial: ninguna entidad tenía marca de avance, se extrajo todo
+  [OK] lo extraído coincide con lo cargado en raw en cada entidad
+--- Conciliación del modelo con el origen válido (s3://.../quality/batch_id=20261104T175208Z/reconciliation.json) ---
+  [OK] ventas: origen=253 filas / 7293790.26; modelo=253 filas / 7293790.26; llaves duplicadas=0
+  [OK] reseñas: origen=150 filas / 0; modelo=150 filas / 0; llaves duplicadas=0
+  [OK] eventos de navegación: origen=500 filas / 0; modelo=500 filas / 0; llaves duplicadas=0
+  [OK] subtotal de ventas por fecha de negocio: fechas con diferencia=0
+  Pruebas de dbt: {'pass': 92, 'warn': 0, 'error': 0, 'skip': 0, 'total': 92}
+Estado actual del modelo: {"ventas": [253, 253, "7293790.26", ************], "resenas": [150, 150, "477", ************], "eventos": [500, 500, "0", 1051341798984], "dim_customer": [50, 50], "dim_product": [25, 25], "cuarentena": [32], "lotes_completos": [2]}
+  [OK] los tres hechos y las dimensiones tienen datos

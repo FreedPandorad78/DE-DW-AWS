@@ -7,6 +7,10 @@ model-paths: ["models"]
 test-paths: ["tests"]
 clean-targets: ["target", "dbt_packages"]
 
+dispatch:
+  - macro_namespace: ecommerce_dw
+    search_order: ['ecommerce_dw']
+
 models:
   ecommerce_dw:
     intermediate:

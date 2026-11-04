@@ -1,0 +1,36 @@
+s3_evidencia.txt
+Generado desde el estado real en AWS el 2026-11-04 18:25:49 UTC
+
+Bucket privado: s3://bucket-taller-dw-c6097fb470   |   estructura raw/<fuente>/<entidad>/batch_id=<id>/{data.csv, manifest.json}
+
+== Lotes por entidad (cada lote tiene su archivo y su manifiesto; ninguno se sobrescribe) ==
+  fuente  | entidad           | lotes | completos | primer lote      | último lote     
+  --------+-------------------+-------+-----------+------------------+-----------------
+  mongodb | navigation_events | 8     | 8         | 20261104T171111Z | 20261104T181537Z
+  mongodb | reviews           | 8     | 8         | 20261104T171111Z | 20261104T181537Z
+  mysql   | customers         | 8     | 8         | 20261104T171111Z | 20261104T181537Z
+  mysql   | order_items       | 8     | 8         | 20261104T171111Z | 20261104T181537Z
+  mysql   | orders            | 8     | 8         | 20261104T171111Z | 20261104T181537Z
+  mysql   | products          | 8     | 8         | 20261104T171111Z | 20261104T181537Z
+
+== Manifiesto de ejemplo: raw/mysql/orders/batch_id=20261104T181537Z/manifest.json ==
+{
+  "batch_id": "20261104T181537Z",
+  "source": "mysql",
+  "entity": "orders",
+  "rows": 10,
+  "extracted_at": "2026-11-04T18:15:43+00:00",
+  "watermark_column": "order_date",
+  "watermark_from": "2025-12-27 10:02:00",
+  "watermark_to": "2026-01-04 10:02:00",
+  "sha256": "ddf6599ee869d5c498ca6d5d58e2944cbc60d0d4234b29c13a39ca9ad026ef90",
+  "s3_bucket": "bucket-taller-dw-c6097fb470",
+  "s3_prefix": "raw/mysql/orders/batch_id=20261104T181537Z/",
+  "s3_key": "raw/mysql/orders/batch_id=20261104T181537Z/data.csv",
+  "reused": false
+}
+
+== Otros prefijos del bucket ==
+  raw/_batches/    8 objetos
+  quality/         6 objetos
+  runs/            9 objetos

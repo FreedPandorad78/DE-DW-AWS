@@ -1,0 +1,64 @@
+indicador_ventas.txt
+Generado desde el estado real en AWS el 2026-11-04 18:25:44 UTC
+
+Indicador: ventas (subtotal) y líneas de pedido por mes.
+Se concilia entre el origen válido (capa intermediate, ya sin los registros en cuarentena) y el modelo analítico (marts).
+
+== Consulta sobre el modelo analítico (marts.fct_sales + marts.dim_date) ==
+select cal.year as anio, cal.month as mes, count(*) as lineas, sum(f.subtotal) as ventas
+from marts.fct_sales f join marts.dim_date cal on cal.date_sk = f.date_sk
+group by cal.year, cal.month order by 1, 2
+
+  año  | mes | líneas | ventas   
+  -----+-----+--------+----------
+  2025 | 1   | 21     | 615803.48
+  2025 | 2   | 19     | 506166.83
+  2025 | 3   | 22     | 679602.38
+  2025 | 4   | 25     | 569132.49
+  2025 | 5   | 25     | 698614.93
+  2025 | 6   | 21     | 467645.05
+  2025 | 7   | 15     | 490266.01
+  2025 | 8   | 20     | 691690.14
+  2025 | 9   | 18     | 592981.03
+  2025 | 10  | 23     | 663719.60
+  2025 | 11  | 18     | 549384.47
+  2025 | 12  | 26     | 768783.85
+  2026 | 1   | 9      | 190410.48
+
+== Consulta sobre el origen válido (intermediate) ==
+select cast(extract(year from o.order_date) as integer) as anio, cast(extract(month from o.order_date) as integer) as mes,
+       count(*) as lineas, sum(i.subtotal) as ventas
+from intermediate.int_mysql__order_items__valid i join intermediate.int_mysql__orders__valid o on o.order_id = i.order_id
+group by 1, 2 order by 1, 2
+
+  año  | mes | líneas | ventas   
+  -----+-----+--------+----------
+  2025 | 1   | 21     | 615803.48
+  2025 | 2   | 19     | 506166.83
+  2025 | 3   | 22     | 679602.38
+  2025 | 4   | 25     | 569132.49
+  2025 | 5   | 25     | 698614.93
+  2025 | 6   | 21     | 467645.05
+  2025 | 7   | 15     | 490266.01
+  2025 | 8   | 20     | 691690.14
+  2025 | 9   | 18     | 592981.03
+  2025 | 10  | 23     | 663719.60
+  2025 | 11  | 18     | 549384.47
+  2025 | 12  | 26     | 768783.85
+  2026 | 1   | 9      | 190410.48
+
+== Conciliación: meses cuya venta o cantidad de líneas difiere entre el origen y el modelo ==
+select count(*) as meses_con_diferencia from (
+    select coalesce(m.anio, s.anio) as anio, coalesce(m.mes, s.mes) as mes
+    from (select cal.year as anio, cal.month as mes, count(*) as lineas, sum(f.subtotal) as ventas
+from marts.fct_sales f join marts.dim_date cal on cal.date_sk = f.date_sk
+group by cal.year, cal.month) m
+    full outer join (select cast(extract(year from o.order_date) as integer) as anio, cast(extract(month from o.order_date) as integer) as mes,
+       count(*) as lineas, sum(i.subtotal) as ventas
+from intermediate.int_mysql__order_items__valid i join intermediate.int_mysql__orders__valid o on o.order_id = i.order_id
+group by 1, 2) s on m.anio = s.anio and m.mes = s.mes
+    where m.ventas is null or s.ventas is null or m.ventas <> s.ventas or m.lineas <> s.lineas) d
+
+  resultado: 0
+  total modelo: 7,484,200.74 en 262 líneas | total origen válido: 7,484,200.74 en 262 líneas
+  CONCLUSIÓN: el indicador coincide en todos los meses

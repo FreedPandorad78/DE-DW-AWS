@@ -1,0 +1,54 @@
+ESCENARIO: Fallo controlado y reejecución (transformación dbt)
+RESULTADO ESPERADO: Recuperación sin pérdida ni duplicación: el lote se completa en el reintento
+ESTADO: CUMPLE
+FECHA (UTC): 2026-11-04 18:19:06
+
+Fuentes: Batch 4 (2026-01-04): 3 new orders, 3 reviews and 3 navigation events upserted. Se provoca UN fallo controlado (simular_fallo=dbt_marts).
+Ejecución de Airflow: esc_1104131527 -> EXITOSO | lote 20261104T181537Z | modo NUEVA_EXTRACCION
+  [OK] la ejecución terminó EXITOSA y todas las tareas en success
+--- Registros de la tarea 5_dbt_marts, un archivo por intento (se ven el lote y la tarea en cada línea) ---
+### /opt/airflow/logs/dag_id=dw_pipeline/run_id=esc_1104131527/task_id=5_dbt_marts/attempt=1.log
+    raise RuntimeError(f"FALLO SIMULADO antes de dbt {command} {selector}: raw ya está cargado; el reintento continúa desde aquí")
+RuntimeError: FALLO SIMULADO antes de dbt run path:models/marts: raw ya está cargado; el reintento continúa desde aquí
+[2026-11-04T18:16:53.000+0000] {standard_task_runner.py:124} ERROR - Failed to execute job 116 for task 5_dbt_marts (FALLO SIMULADO antes de dbt run path:models/marts: raw ya está cargado; el reintento continúa desde aquí; 2702)
+    raise RuntimeError(f"FALLO SIMULADO antes de dbt {command} {selector}: raw ya está cargado; el reintento continúa desde aquí")
+RuntimeError: FALLO SIMULADO antes de dbt run path:models/marts: raw ya está cargado; el reintento continúa desde aquí
+### /opt/airflow/logs/dag_id=dw_pipeline/run_id=esc_1104131527/task_id=5_dbt_marts/attempt=2.log
+[2026-11-04T18:18:27.466+0000] {dbt_runner.py:30} INFO - [lote=20261104T181537Z] dbt| [0m18:18:26  8 of 9 OK created sql incremental model marts.fct_reviews ...................... [[32mSUCCESS[0m in 6.54s]
+[2026-11-04T18:18:27.466+0000] {dbt_runner.py:30} INFO - [lote=20261104T181537Z] dbt| [0m18:18:26  9 of 9 OK created sql incremental model marts.fct_sales ........................ [[32mSUCCESS[0m in 6.81s]
+[2026-11-04T18:18:27.466+0000] {dbt_runner.py:30} INFO - [lote=20261104T181537Z] dbt| [0m18:18:26  
+[2026-11-04T18:18:27.467+0000] {dbt_runner.py:30} INFO - [lote=20261104T181537Z] dbt| [0m18:18:26  Finished running 3 incremental models, 6 table models in 0 hours 0 minutes and 13.38 seconds (13.38s).
+[2026-11-04T18:18:27.467+0000] {dbt_runner.py:30} INFO - [lote=20261104T181537Z] dbt| [0m18:18:26  
+[2026-11-04T18:18:27.467+0000] {dbt_runner.py:30} INFO - [lote=20261104T181537Z] dbt| [0m18:18:26  [32mCompleted successfully[0m
+[2026-11-04T18:18:27.467+0000] {dbt_runner.py:30} INFO - [lote=20261104T181537Z] dbt| [0m18:18:26  
+[2026-11-04T18:18:27.467+0000] {dbt_runner.py:30} INFO - [lote=20261104T181537Z] dbt| [0m18:18:26  Done. PASS=9 WARN=0 ERROR=0 SKIP=0 TOTAL=9
+[2026-11-04T18:18:27.467+0000] {logging_utils.py:14} INFO - [lote=20261104T181537Z] [tarea=5_dbt_run] resultado: {'pass': 9, 'warn': 0, 'error': 0, 'skip': 0, 'total': 9}
+
+--- Estado del lote en control.batches ---
+  [['20261104T181537Z', 'COMPLETO', None]]
+--- Estado del almacén (filas, llaves distintas, total, huella del contenido) ---
+  ventas           antes=[259, 259, '7420730.58', ************]
+                   después=[262, 262, '7484200.74', ************]
+  resenas          antes=[156, 156, '493', ************]
+                   después=[159, 159, '500', ************]
+  eventos          antes=[506, 506, '0', 1060647705276]
+                   después=[509, 509, '0', 1066697110931]
+  dim_customer     antes=[51, 50]
+                   después=[51, 50]
+  dim_product      antes=[26, 25]
+                   después=[26, 25]
+  cuarentena       antes=[32]
+                   después=[32]
+  lotes_completos  antes=[5]
+                   después=[6]
+  [OK] el primer intento falló a propósito
+  [OK] hubo un segundo intento y el lote terminó COMPLETO
+  [OK] raw quedó con las filas extraídas, sin duplicados ni pérdidas
+  [OK] los hechos crecieron exactamente con el lote nuevo: {'ventas': 3, 'resenas': 3, 'eventos': 3}
+  [OK] sin llaves duplicadas en los hechos
+--- Conciliación del modelo con el origen válido (s3://.../quality/batch_id=20261104T181537Z/reconciliation.json) ---
+  [OK] ventas: origen=262 filas / 7484200.74; modelo=262 filas / 7484200.74; llaves duplicadas=0
+  [OK] reseñas: origen=159 filas / 0; modelo=159 filas / 0; llaves duplicadas=0
+  [OK] eventos de navegación: origen=509 filas / 0; modelo=509 filas / 0; llaves duplicadas=0
+  [OK] subtotal de ventas por fecha de negocio: fechas con diferencia=0
+  Pruebas de dbt: {'pass': 92, 'warn': 0, 'error': 0, 'skip': 0, 'total': 92}

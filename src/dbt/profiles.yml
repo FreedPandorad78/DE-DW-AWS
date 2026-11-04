@@ -1,8 +1,22 @@
+# Producción: Redshift. Las credenciales llegan por variables de entorno; la contraseña se lee de
+# Secrets Manager en cada ejecución (ver ecommerce_dw/transformations/dbt_runner.py) y nunca se guarda en disco.
+# El objetivo duckdb solo existe para las pruebas locales del proyecto (tests/).
 ecommerce_dw:
-  target: local
+  target: "{{ env_var('DBT_TARGET', 'redshift') }}"
   outputs:
-    local:
+    redshift:
+      type: redshift
+      host: "{{ env_var('REDSHIFT_HOST') }}"
+      port: "{{ env_var('REDSHIFT_PORT', '5439') | as_number }}"
+      user: "{{ env_var('REDSHIFT_USER') }}"
+      password: "{{ env_var('REDSHIFT_PASSWORD') }}"
+      dbname: "{{ env_var('REDSHIFT_DATABASE', 'dev') }}"
+      schema: intermediate
+      threads: 4
+      sslmode: require
+      connect_timeout: 30
+    duckdb:
       type: duckdb
-      path: /opt/warehouse/warehouse.duckdb
+      path: "{{ env_var('DUCKDB_PATH', '/tmp/ecommerce_dw_test.duckdb') }}"
       schema: intermediate
       threads: 1

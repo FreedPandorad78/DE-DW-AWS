@@ -1,0 +1,144 @@
+airflow_evidencia.txt
+Generado desde el estado real en AWS el 2026-11-04 18:25:20 UTC
+
+== 1. Tareas del DAG y sus dependencias ==
+<Task(_PythonDecoratedOperator): 1_validar_conexiones_y_parametros>
+    <Task(_PythonDecoratedOperator): 2_extraer_mongodb>
+        <Task(_PythonDecoratedOperator): 3_escribir_s3>
+            <Task(_PythonDecoratedOperator): 4_cargar_redshift>
+                <Task(_PythonDecoratedOperator): 5_dbt_deps>
+                    <Task(_PythonDecoratedOperator): 5_dbt_seed>
+                        <Task(_PythonDecoratedOperator): 5_dbt_intermediate>
+                            <Task(_PythonDecoratedOperator): 5_dbt_quarantine>
+                                <Task(_PythonDecoratedOperator): 5_dbt_snapshot>
+                                    <Task(_PythonDecoratedOperator): 5_dbt_marts>
+                                        <Task(_PythonDecoratedOperator): 6_pruebas_calidad>
+                                            <Task(_PythonDecoratedOperator): 7_registrar_resultado>
+    <Task(_PythonDecoratedOperator): 2_extraer_mysql>
+        <Task(_PythonDecoratedOperator): 3_escribir_s3>
+            <Task(_PythonDecoratedOperator): 4_cargar_redshift>
+                <Task(_PythonDecoratedOperator): 5_dbt_deps>
+                    <Task(_PythonDecoratedOperator): 5_dbt_seed>
+                        <Task(_PythonDecoratedOperator): 5_dbt_intermediate>
+                            <Task(_PythonDecoratedOperator): 5_dbt_quarantine>
+                                <Task(_PythonDecoratedOperator): 5_dbt_snapshot>
+                                    <Task(_PythonDecoratedOperator): 5_dbt_marts>
+                                        <Task(_PythonDecoratedOperator): 6_pruebas_calidad>
+                                            <Task(_PythonDecoratedOperator): 7_registrar_resultado>
+    <Task(_PythonDecoratedOperator): 3_escribir_s3>
+        <Task(_PythonDecoratedOperator): 4_cargar_redshift>
+            <Task(_PythonDecoratedOperator): 5_dbt_deps>
+                <Task(_PythonDecoratedOperator): 5_dbt_seed>
+                    <Task(_PythonDecoratedOperator): 5_dbt_intermediate>
+                        <Task(_PythonDecoratedOperator): 5_dbt_quarantine>
+                            <Task(_PythonDecoratedOperator): 5_dbt_snapshot>
+                                <Task(_PythonDecoratedOperator): 5_dbt_marts>
+                                    <Task(_PythonDecoratedOperator): 6_pruebas_calidad>
+                                        <Task(_PythonDecoratedOperator): 7_registrar_resultado>
+    <Task(_PythonDecoratedOperator): 4_cargar_redshift>
+        <Task(_PythonDecoratedOperator): 5_dbt_deps>
+            <Task(_PythonDecoratedOperator): 5_dbt_seed>
+                <Task(_PythonDecoratedOperator): 5_dbt_intermediate>
+                    <Task(_PythonDecoratedOperator): 5_dbt_quarantine>
+                        <Task(_PythonDecoratedOperator): 5_dbt_snapshot>
+                            <Task(_PythonDecoratedOperator): 5_dbt_marts>
+                                <Task(_PythonDecoratedOperator): 6_pruebas_calidad>
+                                    <Task(_PythonDecoratedOperator): 7_registrar_resultado>
+    <Task(_PythonDecoratedOperator): 5_dbt_deps>
+        <Task(_PythonDecoratedOperator): 5_dbt_seed>
+            <Task(_PythonDecoratedOperator): 5_dbt_intermediate>
+                <Task(_PythonDecoratedOperator): 5_dbt_quarantine>
+                    <Task(_PythonDecoratedOperator): 5_dbt_snapshot>
+                        <Task(_PythonDecoratedOperator): 5_dbt_marts>
+                            <Task(_PythonDecoratedOperator): 6_pruebas_calidad>
+                                <Task(_PythonDecoratedOperator): 7_registrar_resultado>
+    <Task(_PythonDecoratedOperator): 5_dbt_intermediate>
+        <Task(_PythonDecoratedOperator): 5_dbt_quarantine>
+            <Task(_PythonDecoratedOperator): 5_dbt_snapshot>
+                <Task(_PythonDecoratedOperator): 5_dbt_marts>
+                    <Task(_PythonDecoratedOperator): 6_pruebas_calidad>
+                        <Task(_PythonDecoratedOperator): 7_registrar_resultado>
+    <Task(_PythonDecoratedOperator): 5_dbt_marts>
+        <Task(_PythonDecoratedOperator): 6_pruebas_calidad>
+            <Task(_PythonDecoratedOperator): 7_registrar_resultado>
+    <Task(_PythonDecoratedOperator): 5_dbt_quarantine>
+        <Task(_PythonDecoratedOperator): 5_dbt_snapshot>
+            <Task(_PythonDecoratedOperator): 5_dbt_marts>
+                <Task(_PythonDecoratedOperator): 6_pruebas_calidad>
+                    <Task(_PythonDecoratedOperator): 7_registrar_resultado>
+    <Task(_PythonDecoratedOperator): 5_dbt_seed>
+        <Task(_PythonDecoratedOperator): 5_dbt_intermediate>
+            <Task(_PythonDecoratedOperator): 5_dbt_quarantine>
+                <Task(_PythonDecoratedOperator): 5_dbt_snapshot>
+                    <Task(_PythonDecoratedOperator): 5_dbt_marts>
+                        <Task(_PythonDecoratedOperator): 6_pruebas_calidad>
+                            <Task(_PythonDecoratedOperator): 7_registrar_resultado>
+    <Task(_PythonDecoratedOperator): 5_dbt_snapshot>
+        <Task(_PythonDecoratedOperator): 5_dbt_marts>
+            <Task(_PythonDecoratedOperator): 6_pruebas_calidad>
+                <Task(_PythonDecoratedOperator): 7_registrar_resultado>
+    <Task(_PythonDecoratedOperator): 6_pruebas_calidad>
+        <Task(_PythonDecoratedOperator): 7_registrar_resultado>
+    <Task(_PythonDecoratedOperator): 7_registrar_resultado>
+
+== 2. Últimas ejecuciones del DAG ==
+dag_id      | run_id            | state   | execution_date            | start_date                       | end_date                        
+============+===================+=========+===========================+==================================+=================================
+dw_pipeline | esc_1104131527    | success | 2026-11-04T18:15:37+00:00 | 2026-11-04T18:15:37.957170+00:00 | 2026-11-04T18:18:52.182386+00:00
+dw_pipeline | esc_1104131111    | success | 2026-11-04T18:11:21+00:00 | 2026-11-04T18:11:22.575664+00:00 | 2026-11-04T18:14:57.311191+00:00
+dw_pipeline | esc_1104130828    | success | 2026-11-04T18:08:38+00:00 | 2026-11-04T18:08:40.051572+00:00 | 2026-11-04T18:10:46.838423+00:00
+dw_pipeline | esc_1104130550    | success | 2026-11-04T18:06:00+00:00 | 2026-11-04T18:06:00.905749+00:00 | 2026-11-04T18:08:02.070320+00:00
+dw_pipeline | esc_1104130321    | success | 2026-11-04T18:03:31+00:00 | 2026-11-04T18:03:32.191322+00:00 | 2026-11-04T18:05:33.834550+00:00
+dw_pipeline | manual_1104125529 | success | 2026-11-04T17:55:39+00:00 | 2026-11-04T17:55:40.219411+00:00 | 2026-11-04T17:57:38.900430+00:00
+dw_pipeline | manual_1104125157 | success | 2026-11-04T17:52:08+00:00 | 2026-11-04T17:52:08.883828+00:00 | 2026-11-04T17:54:22.274735+00:00
+dw_pipeline | manual_1104124036 | failed  | 2026-11-04T17:40:47+00:00 | 2026-11-04T17:40:47.726860+00:00 | 2026-11-04T17:48:05.028537+00:00
+dw_pipeline | manual_1104121058 | failed  | 2026-11-04T17:11:10+00:00 | 2026-11-04T17:11:11.167183+00:00 | 2026-11-04T17:17:07.878775+00:00
+                                                                                                                                           
+
+== 3. Última ejecución exitosa: esc_1104131527 (lote 20261104T181537Z) ==
+estado: EXITOSO   modo: NUEVA_EXTRACCION   finalizó: 2026-11-04T18:18:49+00:00
+tareas: {
+  "4_cargar_redshift": "success",
+  "5_dbt_deps": "success",
+  "5_dbt_seed": "success",
+  "5_dbt_intermediate": "success",
+  "1_validar_conexiones_y_parametros": "success",
+  "5_dbt_quarantine": "success",
+  "2_extraer_mysql": "success",
+  "2_extraer_mongodb": "success",
+  "3_escribir_s3": "success",
+  "5_dbt_snapshot": "success",
+  "6_pruebas_calidad": "success",
+  "5_dbt_marts": "success"
+}
+filas cargadas en raw: {"mysql.customers": 0, "mysql.products": 0, "mysql.orders": 10, "mysql.order_items": 13, "mongodb.reviews": 10, "mongodb.navigation_events": 15}
+pruebas y conciliación: {"dbt_test": {"pass": 92, "warn": 0, "error": 0, "skip": 0, "total": 92}, "conciliacion_ok": true}
+
+== 4. Registros con lote y tarea (primeras líneas de cada paso) ==
+--- 1_validar_conexiones_y_parametros
+INFO - [lote=20261104T181537Z] [tarea=1_validar_conexiones_y_parametros] acceso verificado: RDS MySQL, DocumentDB, S3 y Redshift; lote 20261104T181537Z (NUEVA_EXTRACCION)
+--- 2_extraer_mysql
+INFO - [lote=20261104T181537Z] [tarea=2_extraer_mysql] mysql.customers: 0 filas (desde 2025-09-01 00:00:00)
+INFO - [lote=20261104T181537Z] [tarea=2_extraer_mysql] mysql.products: 0 filas (desde 2025-09-01 00:00:00)
+INFO - [lote=20261104T181537Z] [tarea=2_extraer_mysql] mysql.orders: 10 filas (desde 2025-12-27 10:02:00)
+INFO - [lote=20261104T181537Z] [tarea=2_extraer_mysql] mysql.order_items: 13 filas (desde 2025-12-27 10:02:00)
+--- 2_extraer_mongodb
+INFO - [lote=20261104T181537Z] [tarea=2_extraer_mongodb] mongodb.reviews: 10 filas (desde 2025-12-27T15:02:00+00:00)
+INFO - [lote=20261104T181537Z] [tarea=2_extraer_mongodb] mongodb.navigation_events: 15 filas (desde 2025-12-27T15:02:00+00:00)
+--- 3_escribir_s3
+INFO - [lote=20261104T181537Z] [tarea=3_escribir_s3] 48 filas en s3://bucket-taller-dw-c6097fb470/raw/.../batch_id=20261104T181537Z/
+--- 4_cargar_redshift
+INFO - lote=20261104T181537Z mysql.customers: 0 filas cargadas en raw.mysql_customers
+INFO - lote=20261104T181537Z mysql.products: 0 filas cargadas en raw.mysql_products
+INFO - lote=20261104T181537Z mysql.orders: 10 filas cargadas en raw.mysql_orders
+INFO - lote=20261104T181537Z mysql.order_items: 13 filas cargadas en raw.mysql_order_items
+--- 5_dbt_marts
+INFO - [lote=20261104T181537Z] dbt run path:models/marts
+INFO - [lote=20261104T181537Z] dbt| [0m18:18:12  Running with dbt=1.9.4
+INFO - [lote=20261104T181537Z] dbt| [0m18:18:12  Registered adapter: redshift=1.9.5
+INFO - [lote=20261104T181537Z] dbt| [0m18:18:13  Found 33 models, 2 seeds, 92 data tests, 2 snapshots, 6 sources, 634 macros
+--- 6_pruebas_calidad
+INFO - [lote=20261104T181537Z] dbt test 
+INFO - [lote=20261104T181537Z] dbt| [0m18:18:32  Running with dbt=1.9.4
+INFO - [lote=20261104T181537Z] dbt| [0m18:18:32  Registered adapter: redshift=1.9.5
+INFO - [lote=20261104T181537Z] dbt| [0m18:18:33  Found 33 models, 2 seeds, 92 data tests, 2 snapshots, 6 sources, 634 macros

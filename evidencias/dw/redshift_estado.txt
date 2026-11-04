@@ -1,0 +1,111 @@
+redshift_estado.txt
+Generado desde el estado real en AWS el 2026-11-04 18:25:48 UTC
+
+
+== Lotes registrados (control.batches)
+batch_id         | mode             | status   | inicio   | fin     
+-----------------+------------------+----------+----------+---------
+20261104T171111Z | NUEVA_EXTRACCION | FALLIDO  | 17:11:14 | 17:17:05
+20261104T174047Z | NUEVA_EXTRACCION | FALLIDO  | 17:40:50 | 17:48:03
+20261104T175208Z | NUEVA_EXTRACCION | COMPLETO | 17:52:11 | 17:54:20
+20261104T175540Z | NUEVA_EXTRACCION | COMPLETO | 17:55:42 | 18:05:33
+20261104T180600Z | NUEVA_EXTRACCION | COMPLETO | 18:06:04 | 18:08:00
+20261104T180840Z | NUEVA_EXTRACCION | COMPLETO | 18:08:42 | 18:10:45
+20261104T181122Z | NUEVA_EXTRACCION | COMPLETO | 18:11:24 | 18:14:56
+20261104T181537Z | NUEVA_EXTRACCION | COMPLETO | 18:15:40 | 18:18:50
+(8 filas)
+
+== Marcas de avance (control.watermarks)
+source  | entity            | watermark_value           | batch_id        
+--------+-------------------+---------------------------+-----------------
+mongodb | navigation_events | 2026-01-04T15:02:00+00:00 | 20261104T181537Z
+mongodb | reviews           | 2026-01-04T15:02:00+00:00 | 20261104T181537Z
+mysql   | customers         | 2025-09-01 00:00:00       | 20261104T180840Z
+mysql   | orders            | 2026-01-04 10:02:00       | 20261104T181537Z
+mysql   | products          | 2025-09-01 00:00:00       | 20261104T180840Z
+(5 filas)
+
+== Filas de raw por lote
+t                       | lote             | n  
+------------------------+------------------+----
+mongo_navigation_events | 20261104T171111Z | 508
+mongo_navigation_events | 20261104T174047Z | 508
+mongo_navigation_events | 20261104T175208Z | 508
+mongo_navigation_events | 20261104T175540Z | 10 
+mongo_navigation_events | 20261104T180600Z | 13 
+mongo_navigation_events | 20261104T180840Z | 11 
+mongo_navigation_events | 20261104T181122Z | 14 
+mongo_navigation_events | 20261104T181537Z | 15 
+mongo_reviews           | 20261104T171111Z | 158
+mongo_reviews           | 20261104T174047Z | 158
+mongo_reviews           | 20261104T175208Z | 158
+mongo_reviews           | 20261104T175540Z | 4  
+mongo_reviews           | 20261104T180600Z | 7  
+mongo_reviews           | 20261104T180840Z | 5  
+mongo_reviews           | 20261104T181122Z | 8  
+mongo_reviews           | 20261104T181537Z | 10 
+mysql_customers         | 20261104T171111Z | 54 
+mysql_customers         | 20261104T174047Z | 54 
+mysql_customers         | 20261104T175208Z | 54 
+mysql_customers         | 20261104T180840Z | 1  
+mysql_order_items       | 20261104T171111Z | 259
+mysql_order_items       | 20261104T174047Z | 259
+mysql_order_items       | 20261104T175208Z | 259
+mysql_order_items       | 20261104T175540Z | 6  
+mysql_order_items       | 20261104T180600Z | 9  
+mysql_order_items       | 20261104T180840Z | 7  
+mysql_order_items       | 20261104T181122Z | 10 
+mysql_order_items       | 20261104T181537Z | 13 
+mysql_orders            | 20261104T171111Z | 106
+mysql_orders            | 20261104T174047Z | 106
+mysql_orders            | 20261104T175208Z | 106
+mysql_orders            | 20261104T175540Z | 2  
+mysql_orders            | 20261104T180600Z | 5  
+mysql_orders            | 20261104T180840Z | 4  
+mysql_orders            | 20261104T181122Z | 7  
+mysql_orders            | 20261104T181537Z | 10 
+mysql_products          | 20261104T171111Z | 27 
+mysql_products          | 20261104T174047Z | 27 
+mysql_products          | 20261104T175208Z | 27 
+mysql_products          | 20261104T180840Z | 1  
+(40 filas)
+
+== Hechos (marts)
+hecho                 | filas | llaves_distintas | total     
+----------------------+-------+------------------+-----------
+fct_navigation_events | 509   | 509              | -         
+fct_sales             | 262   | 262              | 7484200.74
+fct_reviews           | 159   | 159              | -         
+(3 filas)
+
+== Dimensiones (marts)
+dimension         | filas | vigentes
+------------------+-------+---------
+dim_product       | 26    | 25      
+dim_date          | 1095  | 0       
+dim_geography     | 8     | 0       
+dim_customer      | 51    | 50      
+dim_sales_channel | 3     | 0       
+dim_event_type    | 3     | 0       
+(6 filas)
+
+== Cuarentena por motivo y lote de origen
+tabla             | motivo                | lote_de_origen   | n
+------------------+-----------------------+------------------+--
+customers         | invalid_email         | 20261104T175208Z | 2
+customers         | missing_name          | 20261104T175208Z | 2
+navigation_events | invalid_event_type    | 20261104T175208Z | 2
+navigation_events | missing_occurred_at   | 20261104T175208Z | 2
+navigation_events | orphan_customer       | 20261104T175208Z | 2
+navigation_events | orphan_product        | 20261104T175208Z | 2
+order_items       | orphan_order          | 20261104T175208Z | 2
+order_items       | orphan_product        | 20261104T175208Z | 2
+order_items       | subtotal_mismatch     | 20261104T175208Z | 2
+orders            | invalid_sales_channel | 20261104T175208Z | 2
+orders            | orphan_customer       | 20261104T175208Z | 2
+products          | missing_category      | 20261104T175208Z | 2
+reviews           | invalid_rating        | 20261104T175208Z | 2
+reviews           | missing_reviewed_at   | 20261104T175208Z | 2
+reviews           | orphan_customer       | 20261104T175208Z | 2
+reviews           | orphan_product        | 20261104T175208Z | 2
+(16 filas)

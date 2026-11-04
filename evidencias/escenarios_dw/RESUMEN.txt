@@ -1,0 +1,9 @@
+RESUMEN DE ESCENARIOS DEL DATA WAREHOUSE
+
+CUMPLE     Registros defectuosos  (02_registros_defectuosos.txt)
+CUMPLE     Carga inicial  (01_carga_inicial.txt)
+CUMPLE     Repetición de un lote exitoso  (03_repeticion_lote_exitoso.txt)
+CUMPLE     Nuevo lote incremental  (04_nuevo_lote_incremental.txt)
+CUMPLE     Cambio en un atributo historizado (SCD2)  (05_cambio_atributo_historizado.txt)
+CUMPLE     Fallo controlado y reejecución (carga a Redshift)  (06a_fallo_carga_redshift.txt)
+CUMPLE     Fallo controlado y reejecución (transformación dbt)  (06b_fallo_dbt_marts.txt)

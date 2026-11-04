@@ -12,7 +12,7 @@ with reviews as (
         product_id,
         rating,
         is_verified_purchase,
-        timezone('America/Bogota', reviewed_at) as reviewed_local_at
+        {{ local_timestamp('reviewed_at') }} as reviewed_local_at
     from {{ ref('int_mongodb__reviews__valid') }}
 ),
 customers_versioned as (
@@ -49,4 +49,4 @@ select
     candidate.rating,
     candidate.is_verified_purchase
 from resolved_reviews as candidate
-{{ incremental_candidate_filter('review_sk', 'business_date', ['customer_sk', 'product_sk']) }}
+{{ incremental_candidate_filter('review_sk', 'business_date', ['customer_sk', 'product_sk'], candidates='resolved_reviews') }}

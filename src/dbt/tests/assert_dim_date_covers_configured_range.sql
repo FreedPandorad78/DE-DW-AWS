@@ -2,11 +2,7 @@
 with bounds as (
     select
         count(*) as actual_rows,
-        datediff(
-            'day',
-            cast('{{ var("date_dimension_start") }}' as date),
-            cast('{{ var("date_dimension_end") }}' as date)
-        ) as expected_rows
+        (cast('{{ var("date_dimension_end") }}' as date) - cast('{{ var("date_dimension_start") }}' as date)) as expected_rows
     from {{ ref('dim_date') }}
 )
 select *

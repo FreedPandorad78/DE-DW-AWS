@@ -1,0 +1,41 @@
+seguridad_evidencia.txt
+Generado desde el estado real en AWS el 2026-11-04 18:25:52 UTC
+
+== Red: grupos de seguridad (solo la EC2 alcanza las bases de datos) ==
+  taller-dw-ec2-sg:
+     entra tcp/22 desde 186.121.102.39/32
+  taller-dw-datos-sg:
+     entra tcp/5439 desde grupo sg-05e18efec8a170a4a
+     entra tcp/27017 desde grupo sg-05e18efec8a170a4a
+     entra tcp/3306 desde grupo sg-05e18efec8a170a4a
+
+== RDS MySQL ==
+  db.t3.micro, mysql 8.4.9, acceso público: False, cifrado: True, Multi-AZ: False
+
+== DocumentDB ==
+  motor docdb 5.0.0, cifrado: True, protección contra borrado: False, escalado: {'MinCapacity': 0.5, 'MaxCapacity': 1.0}
+
+== Redshift ==
+  ra3.large x 1, estado: available, acceso público: False, cifrado: True
+  roles de IAM asociados: taller-dw-redshift-role
+
+== EC2 de Airflow ==
+  t3.medium, metadatos IMDSv2 obligatorio: True, límite de saltos: 2, perfil: taller-dw-ec2-profile
+  discos: 30 GB gp3 cifrado=True
+
+== Bucket s3://bucket-taller-dw-c6097fb470 ==
+  bloqueo de acceso público: {'BlockPublicAcls': True, 'IgnorePublicAcls': True, 'BlockPublicPolicy': True, 'RestrictPublicBuckets': True}
+  cifrado por defecto: AES256
+
+== Roles de IAM ==
+  taller-dw-ec2-role: políticas en línea ['permisos-dw']
+     (el usuario que despliega no puede leer el contenido de la política; está en infra/desplegar_dw.py)
+  taller-dw-redshift-role: políticas en línea ['leer-s3']
+     (el usuario que despliega no puede leer el contenido de la política; está en infra/desplegar_dw.py)
+
+== Secretos (solo nombres; los valores no se leen ni se guardan fuera de Secrets Manager) ==
+  taller-dw/docdb, taller-dw/rds, taller-dw/redshift
+
+== Archivos del repositorio: búsqueda de credenciales ==
+  ninguna llave de acceso ni clave privada en el código, la infraestructura, los docs ni las pruebas
+  docker/.env.example solo trae marcadores: True

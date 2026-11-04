@@ -1,0 +1,54 @@
+ESCENARIO: Fallo controlado y reejecución (carga a Redshift)
+RESULTADO ESPERADO: Recuperación sin pérdida ni duplicación: el lote se completa en el reintento
+ESTADO: CUMPLE
+FECHA (UTC): 2026-11-04 18:15:14
+
+Fuentes: Batch 3 (2026-01-03): 3 new orders, 3 reviews and 3 navigation events upserted. Se provoca UN fallo controlado (simular_fallo=carga_redshift).
+Ejecución de Airflow: esc_1104131111 -> EXITOSO | lote 20261104T181122Z | modo NUEVA_EXTRACCION
+  [OK] la ejecución terminó EXITOSA y todas las tareas en success
+--- Registros de la tarea 4_cargar_redshift, un archivo por intento (se ven el lote y la tarea en cada línea) ---
+### /opt/airflow/logs/dag_id=dw_pipeline/run_id=esc_1104131111/task_id=4_cargar_redshift/attempt=1.log
+[2026-11-04T18:11:35.510+0000] {load_redshift.py:62} INFO - lote=20261104T181122Z mysql.customers: 0 filas cargadas en raw.mysql_customers
+[2026-11-04T18:11:36.592+0000] {load_redshift.py:62} INFO - lote=20261104T181122Z mysql.products: 0 filas cargadas en raw.mysql_products
+    raise RuntimeError(f"FALLO SIMULADO tras cargar {len(loaded)} entidades: las cargadas ya están en raw; "
+RuntimeError: FALLO SIMULADO tras cargar 2 entidades: las cargadas ya están en raw; la reejecución del lote reemplaza sus filas sin duplicar
+[2026-11-04T18:11:36.692+0000] {standard_task_runner.py:124} ERROR - Failed to execute job 96 for task 4_cargar_redshift (FALLO SIMULADO tras cargar 2 entidades: las cargadas ya están en raw; la reejecución del lote reemplaza sus filas sin duplicar; 2340)
+    raise RuntimeError(f"FALLO SIMULADO tras cargar {len(loaded)} entidades: las cargadas ya están en raw; "
+RuntimeError: FALLO SIMULADO tras cargar 2 entidades: las cargadas ya están en raw; la reejecución del lote reemplaza sus filas sin duplicar
+### /opt/airflow/logs/dag_id=dw_pipeline/run_id=esc_1104131111/task_id=4_cargar_redshift/attempt=2.log
+[2026-11-04T18:13:09.029+0000] {load_redshift.py:62} INFO - lote=20261104T181122Z mysql.customers: 0 filas cargadas en raw.mysql_customers
+[2026-11-04T18:13:09.967+0000] {load_redshift.py:62} INFO - lote=20261104T181122Z mysql.products: 0 filas cargadas en raw.mysql_products
+[2026-11-04T18:13:11.606+0000] {load_redshift.py:62} INFO - lote=20261104T181122Z mysql.orders: 7 filas cargadas en raw.mysql_orders
+[2026-11-04T18:13:13.062+0000] {load_redshift.py:62} INFO - lote=20261104T181122Z mysql.order_items: 10 filas cargadas en raw.mysql_order_items
+[2026-11-04T18:13:15.182+0000] {load_redshift.py:62} INFO - lote=20261104T181122Z mongodb.reviews: 8 filas cargadas en raw.mongo_reviews
+[2026-11-04T18:13:16.972+0000] {load_redshift.py:62} INFO - lote=20261104T181122Z mongodb.navigation_events: 14 filas cargadas en raw.mongo_navigation_events
+[2026-11-04T18:13:17.432+0000] {logging_utils.py:14} INFO - [lote=20261104T181122Z] [tarea=4_cargar_redshift] filas cargadas en raw: {'mysql.customers': 0, 'mysql.products': 0, 'mysql.orders': 7, 'mysql.order_items': 10, 'mongodb.reviews': 8, 'mongodb.navigati
+
+--- Estado del lote en control.batches ---
+  [['20261104T181122Z', 'COMPLETO', None]]
+--- Estado del almacén (filas, llaves distintas, total, huella del contenido) ---
+  ventas           antes=[256, 256, '7357260.42', ************]
+                   después=[259, 259, '7420730.58', ************]
+  resenas          antes=[153, 153, '483', ************]
+                   después=[156, 156, '493', ************]
+  eventos          antes=[503, 503, '0', 1059460949802]
+                   después=[506, 506, '0', 1060647705276]
+  dim_customer     antes=[51, 50]
+                   después=[51, 50]
+  dim_product      antes=[26, 25]
+                   después=[26, 25]
+  cuarentena       antes=[32]
+                   después=[32]
+  lotes_completos  antes=[4]
+                   después=[5]
+  [OK] el primer intento falló a propósito
+  [OK] hubo un segundo intento y el lote terminó COMPLETO
+  [OK] raw quedó con las filas extraídas, sin duplicados ni pérdidas
+  [OK] los hechos crecieron exactamente con el lote nuevo: {'ventas': 3, 'resenas': 3, 'eventos': 3}
+  [OK] sin llaves duplicadas en los hechos
+--- Conciliación del modelo con el origen válido (s3://.../quality/batch_id=20261104T181122Z/reconciliation.json) ---
+  [OK] ventas: origen=259 filas / 7420730.58; modelo=259 filas / 7420730.58; llaves duplicadas=0
+  [OK] reseñas: origen=156 filas / 0; modelo=156 filas / 0; llaves duplicadas=0
+  [OK] eventos de navegación: origen=506 filas / 0; modelo=506 filas / 0; llaves duplicadas=0
+  [OK] subtotal de ventas por fecha de negocio: fechas con diferencia=0
+  Pruebas de dbt: {'pass': 92, 'warn': 0, 'error': 0, 'skip': 0, 'total': 92}

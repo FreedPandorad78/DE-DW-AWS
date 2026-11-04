@@ -4,7 +4,7 @@ with raw_order_dates as (
     select
         order_id,
         cast(order_date as date) as date
-    from {{ source('mysql_raw', 'mysql_orders') }}
+    from ({{ latest_batch_version(source('mysql_raw', 'mysql_orders'), 'order_id') }}) as latest_orders
 ),
 expected as (
     select
@@ -20,4 +20,4 @@ select
     sales.date_sk as fact_date_sk
 from expected
 inner join {{ ref('fct_sales') }} as sales using (sale_sk)
-where expected.date_sk is distinct from sales.date_sk
+where {{ is_distinct_from('expected.date_sk', 'sales.date_sk') }}

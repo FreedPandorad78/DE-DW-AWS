@@ -1,81 +1,67 @@
-# Data warehouse local de comercio electrónico colombiano
+# Data warehouse de comercio electrónico en AWS
 
-PoC reproducible de ventas. Genera datos sintéticos en MySQL y MongoDB, los carga en DuckDB y construye una constelación de hechos con dbt. Airflow orquesta la extracción y las transformaciones; los scripts preparan y operan el entorno.
+Migración del data warehouse local (MySQL + MongoDB + DuckDB + dbt + Airflow en Docker) a AWS:
 
-Este README es el índice. Cada etapa tiene su guía en [docs/etapas/](docs/etapas/) con los comandos, el resultado esperado, las consultas para DBeaver o Compass y los archivos que intervienen.
-
-## Ruta de aprendizaje
-
-```mermaid
-flowchart TD
-    E1[1. Entorno con Docker] --> E2[2. Fuentes iniciales]
-    E2 --> E3[3. Extracción a raw]
-    E3 --> E4[4. Calidad y cuarentena]
-    E4 --> E5[5. Modelo estrella]
-    E5 --> E6[6. Pruebas dbt]
-    E6 --> E7[7. Idempotencia]
-    E7 --> E8[8. Cambios SCD tipo 2]
-    E8 --> E9[9. Carga incremental por lote]
+```
+RDS MySQL ─┐                                   ┌─ raw ─ intermediate ─ quarantine ─ marts (dbt)
+           ├─► extracción incremental por lote ─► S3 raw/<fuente>/<entidad>/batch_id=<id>/ ─► COPY ─► Redshift
+DocumentDB ┘     (EC2: Airflow + dbt)                                                          └─ control (lotes y marcas de avance)
 ```
 
-## Requisitos
+El DAG `dw_pipeline` tiene 7 pasos: validar conexiones y parámetros, extraer, escribir en S3, cargar en Redshift,
+transformar con dbt, pruebas de calidad y conciliación, y registrar el resultado.
 
-- Windows con Docker Desktop y WSL 2, o Docker Engine con Compose v2 en Linux.
-- Ejecutar los comandos desde la raíz del repositorio, dentro de WSL o de la terminal Linux.
-- Puertos libres: 8080 (Airflow, `AIRFLOW_UI_PORT`), 3306 (MySQL), 27017 (MongoDB) y 5433 (PostgreSQL de Airflow, `POSTGRES_HOST_PORT`).
-- DBeaver y MongoDB Compass para inspeccionar resultados. Cómo conectarlos está en [docs/connections.md](docs/connections.md).
-- No hace falta instalar Python ni dbt en el equipo: la imagen de Docker los contiene.
+## Estructura
 
-## Inicio rápido
+| Ruta | Contenido |
+|---|---|
+| `src/airflow/dags/dw_pipeline.py` | DAG de los 7 pasos |
+| `src/ecommerce_dw/pipeline.py` | Lógica de cada paso (probable sin Airflow) |
+| `src/ecommerce_dw/ingestion/` | Extracción incremental, escritura en S3, `COPY` a Redshift y tablas de control |
+| `src/ecommerce_dw/aws/` | Conexiones con TLS y secretos de Secrets Manager |
+| `src/ecommerce_dw/sources/` | Generación de datos, lotes y cambios para RDS y DocumentDB |
+| `src/dbt/` | Modelos, snapshots SCD2, pruebas y macros; corre en Redshift (producción) y en DuckDB (pruebas locales) |
+| `docker/` | Imagen de Airflow con dbt-redshift y `docker-compose` (sin secretos) |
+| `tests/test_pipeline_local.py` | Prueba de punta a punta sin AWS |
+| `infra/desplegar_dw.py` | Crea la infraestructura en AWS (red, bucket, secretos, roles, RDS, DocumentDB, Redshift, EC2). `--plan` muestra qué creará y su costo por hora |
+| `infra/preparar_airflow_dw.sh` | Sube el código, crea el `.env` con claves aleatorias, construye la imagen y levanta Airflow en la EC2 |
+| `infra/energia_dw.sh` | `pausar` / `reanudar`: lo que cobra por hora (Redshift, RDS, DocumentDB, EC2) |
+| `infra/destruir_dw.py` | Elimina todo y verifica que no queda nada (guarda la evidencia) |
+| `infra/politica_user_cli_dw.json` | Permisos de IAM que necesita el usuario que despliega |
+| `tests/test_despliegue.py` | Prueba del despliegue y de la destrucción contra AWS simulado |
+| `docs/local_original/` | Documentación de la versión local, como referencia |
+
+## Prueba local, sin AWS
 
 ```bash
-./scripts/configure_environment.sh
-./scripts/run_pipeline.sh
+pip install dbt-core==1.9.4 dbt-duckdb==1.9.4 duckdb mongomock "moto[s3]" Faker PyMySQL pymongo boto3
+python tests/test_pipeline_local.py
 ```
 
-El primer comando crea `.env` desde `docker/.env.example`. El segundo levanta los servicios, crea las fuentes, genera datos y dispara el DAG `ecommerce_pipeline`. La primera ejecución tarda más porque construye la imagen de Airflow.
+Simula RDS (SQLite), DocumentDB (mongomock), S3 (moto) y Redshift (DuckDB con la misma SQL de carga), y ejecuta los modelos
+de dbt de verdad. Comprueba que el resultado coincide con la versión local: 253 ventas, 150 reseñas, 500 eventos y la misma cuarentena.
 
-Para recorrer las etapas una a una, sigue las guías en orden, empezando por [01_entorno](docs/etapas/01_entorno.md).
+## Diferencias con la versión local
 
-## Etapas
+| Local | AWS |
+|---|---|
+| MySQL y MongoDB en contenedores | RDS MySQL y DocumentDB, con TLS y contraseñas en Secrets Manager |
+| raw se reemplaza en cada corrida | raw acumula lotes (`_batch_id`); staging toma la última versión de cada llave |
+| Extrae las tablas completas | Extracción inicial y luego incremental por marca de avance, con ventana de reproceso de 7 días |
+| CSV en una carpeta local | S3: `raw/<fuente>/<entidad>/batch_id=<id>/` con manifiesto; nunca se sobrescribe un lote |
+| DuckDB | Redshift; el esquema `raw` va entre comillas porque `RAW` es palabra reservada |
+| 3 DAGs | 1 DAG de 7 pasos, con parámetros de reproceso y de fallo controlado |
 
-| # | Etapa | Qué compruebas | Guía |
-| --- | --- | --- | --- |
-| 1 | Entorno | Servicios activos, Airflow accesible y conexiones a las fuentes | [01_entorno.md](docs/etapas/01_entorno.md) |
-| 2 | Fuentes iniciales | Tablas y colecciones creadas, con datos sintéticos y defectos inyectados | [02_fuentes_iniciales.md](docs/etapas/02_fuentes_iniciales.md) |
-| 3 | Extracción a raw | Copia completa de las fuentes en el esquema `raw` de DuckDB | [03_extraccion_raw.md](docs/etapas/03_extraccion_raw.md) |
-| 4 | Calidad y cuarentena | Filas válidas en `intermediate` y rechazadas en `quarantine`, con motivo | [04_calidad_cuarentena.md](docs/etapas/04_calidad_cuarentena.md) |
-| 5 | Modelo estrella | Dimensiones, snapshots y hechos en `marts` | [05_modelo_estrella.md](docs/etapas/05_modelo_estrella.md) |
-| 6 | Pruebas dbt | Pruebas de unicidad, relaciones, valores y totales | [06_pruebas.md](docs/etapas/06_pruebas.md) |
-| 7 | Idempotencia | Repetir el pipeline no cambia los conteos | [07_idempotencia.md](docs/etapas/07_idempotencia.md) |
-| 8 | Cambios SCD tipo 2 | Un cliente y un producto conservan su historia | [08_cambios_scd2.md](docs/etapas/08_cambios_scd2.md) |
-| 9 | Carga incremental | Cada lote agrega filas a los tres hechos y repetirlo no cambia nada | [09_carga_incremental.md](docs/etapas/09_carga_incremental.md) |
+## Documentación
 
-## Operación
+| Documento | Contenido |
+|---|---|
+| [docs/arquitectura_aws.md](docs/arquitectura_aws.md) | Diagrama, componentes, capas de Redshift y el DAG de 7 pasos |
+| [docs/lotes_incrementalidad.md](docs/lotes_incrementalidad.md) | Cómo se identifica un lote, cuándo avanza la marca, extracción incremental, reproceso y recuperación |
+| [docs/decisiones_tecnicas.md](docs/decisiones_tecnicas.md) | Diferencias frente a lo local, ajustes de SQL para Redshift, MongoDB frente a DocumentDB |
+| [docs/calidad_y_pruebas.md](docs/calidad_y_pruebas.md) | Reglas de calidad, pruebas y escenarios |
+| [docs/instrucciones.md](docs/instrucciones.md) | Despliegue, ejecución, pausa y eliminación, paso a paso |
+| [docs/costos_seguridad.md](docs/costos_seguridad.md) | Estimación de costos y controles de seguridad |
+| [docs/guion_demostracion_dw.md](docs/guion_demostracion_dw.md) | Guion de la demostración |
 
-| Objetivo | Comando |
-| --- | --- |
-| Levantar servicios sin regenerar fuentes | `./scripts/start_infrastructure.sh` |
-| Detener servicios conservando datos | `./scripts/stop_infrastructure.sh` |
-| Crear tablas MySQL y colecciones MongoDB | `./scripts/create_source_schema.sh` |
-| Regenerar datos sintéticos | `./scripts/generate_data.sh` |
-| Ejecutar el pipeline sin regenerar fuentes | `./scripts/run_pipeline.sh --existing-sources` |
-| Ejecutar dbt completo sobre el warehouse existente | `./scripts/run_dbt.sh` |
-| Borrar contenedores, volúmenes y datos locales | `./scripts/reset_environment.sh` |
-
-`run_pipeline.sh` sin argumentos ya ejecuta `start_infrastructure.sh`, `create_source_schema.sh` y `generate_data.sh`; no hace falta llamarlos antes. Sin `--existing-sources`, cada ejecución regenera las fuentes y elimina los lotes incrementales añadidos.
-
-## Reglas para el laboratorio
-
-- DuckDB admite un solo escritor. Cierra la conexión de DBeaver antes de ejecutar el pipeline, o conéctate en modo solo lectura.
-- Los conteos de las guías corresponden a los valores por defecto (`--seed 42`) tras `reset_environment.sh` y `run_pipeline.sh`.
-- Si un conteo no coincide, revisa la etapa anterior antes de continuar.
-- `verify_incremental_load.sh --batch-id N` necesita un `N` que todavía no exista en las fuentes. Tras regenerar los datos, todos los números de lote vuelven a estar libres.
-
-## Modelo y documentación de referencia
-
-- [Arquitectura y flujo de datos](docs/architecture.md)
-- [Modelo de datos: estrella, SCD tipo 2, llaves subrogadas y fuentes](docs/data_model.md)
-- [Orquestación con Airflow](docs/airflow.md)
-- [Conexión desde DBeaver y Compass](docs/connections.md)
-- [Consultas analíticas de ejemplo](docs/analytical_queries.sql)
+Las evidencias están en `evidencias/dw/` y `evidencias/escenarios_dw/`. La versión local original se conserva en `docs/local_original/`.

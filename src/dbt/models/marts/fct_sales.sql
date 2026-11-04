@@ -65,4 +65,4 @@ select
     candidate.unit_price,
     candidate.subtotal
 from resolved_sales as candidate
-{{ incremental_candidate_filter('sale_sk', 'business_date', ['customer_sk', 'product_sk', 'geography_sk']) }}
+{{ incremental_candidate_filter('sale_sk', 'business_date', ['customer_sk', 'product_sk', 'geography_sk'], candidates='resolved_sales') }}
